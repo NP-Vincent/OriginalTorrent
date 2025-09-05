@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Original Torrent</title>
+
+  <!-- Farcaster discovery -->
+  <meta property="fc:frame" content="vNext" />
+  <meta property="fc:miniapp:version" content="1" />
+  <style>
+    :root { --gap:12px; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 16px; }
+    h1 { margin: 0 0 8px; }
+    .card { border:1px solid #e5e5e5; border-radius:12px; padding:16px; margin-bottom:16px; }
+    .row { display:grid; gap: var(--gap); grid-template-columns: 1fr auto; align-items:center; }
+    input[type="text"] { width:100%; padding:10px; border:1px solid #ddd; border-radius:10px; }
+    input[type="file"] { border:1px dashed #bbb; padding:10px; border-radius:10px; }
+    button { padding:10px 14px; border:1px solid #ddd; border-radius:10px; background:#f8f8f8; cursor:pointer; }
+    button:disabled { opacity:.6; cursor:not-allowed; }
+    audio { width:100%; margin-top:10px; }
+    .meta { font-size:12px; color:#555; margin-top:6px; }
+    #log { font-family: ui-monospace, Menlo, Consolas, monospace; font-size:12px; background:#0b0b0b; color:#d4d4d4; padding:10px; border-radius:10px; max-height:180px; overflow:auto; }
+    .flex { display:flex; gap:var(--gap); flex-wrap:wrap; align-items:center; }
+    .pill { font-size:12px; padding:4px 8px; border-radius:999px; background:#f2f2f2; border:1px solid #e5e5e5; }
+    .small { font-size:12px; }
+  </style>
+</head>
+<body>
+  <h1>SQMU — WebRTC Audio Streamer</h1>
+
+  <!-- Listener -->
+  <div class="card">
+    <h2 style="margin-top:0">Listen</h2>
+    <div class="row">
+      <input id="magnet" type="text" placeholder="Paste magnet URI (licensed content only)" />
+      <button id="playBtn">Play</button>
+    </div>
+    <div class="meta">
+      <span id="status">Idle.</span>
+      <span id="stats"></span>
+    </div>
+    <audio id="player" controls preload="none" playsinline></audio>
+  </div>
+
+  <!-- Creator (optional) -->
+  <div class="card">
+    <h2 style="margin-top:0">Create & Seed (optional)</h2>
+    <div class="flex">
+      <input id="fileInput" type="file" accept="audio/*" />
+      <button id="seedBtn">Seed</button>
+      <span id="seedMagnet" class="small"></span>
+    </div>
+    <div class="meta small">
+      Seeding from the browser requires the tab to stay open. For persistent availability, you’ll want multiple listeners or a desktop/web seed later.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="flex">
+      <div class="pill" id="peerCount">Peers: 0</div>
+      <div class="pill" id="speed">0 KB/s</div>
+      <div class="pill" id="progress">0%</div>
+    </div>
+  </div>
+
+  <div id="log" class="card"></div>
+
+  <!-- Farcaster MiniApp SDK -->
+  <script type="module">
+    import { sdk } from "https://miniapps.farcaster.xyz/sdk";
+    addEventListener("DOMContentLoaded", () => {
+      try { sdk.actions.ready(); } catch {}
+    });
+  </script>
+
+  <!-- WebTorrent (browser ESM) + app logic -->
+  <script type="module">
+    import WebTorrent from "https://esm.sh/webtorrent@2.3.0";
+
+    // UI
+    const logEl = document.getElementById('log');
+    const statusEl = document.getElementById('status');
+    const statsEl  = document.getElementById('stats');
+    const peerEl   = document.getElementById('peerCount');
+    const speedEl  = document.getElementById('speed');
+    const progEl   = document.getElementById('progress');
+    const magnetEl = document.getElementById('magnet');
+    const playBtn  = document.getElementById('playBtn');
+    const player   = document.getElementById('player');
+
+    const fileInput = document.getElementById('fileInput');
+    const seedBtn   = document.getElementById('seedBtn');
+    const seedMagnetEl = document.getElementById('seedMagnet');
+
+    let cfg, client, activeTorrent;
+
+    const log = (m) => { logEl.textContent += m + "\\n"; logEl.scrollTop = logEl.scrollHeight; };
+    const human = (n) => {
+      if (n === 0) return "0 B";
+      const u = ["B","KB","MB","GB","TB"]; let i=0; while(n>=1024 && i<u.length-1){n/=1024;i++;} return n.toFixed(1)+" "+u[i];
+    };
+
+    async function loadConfig() {
+      if (cfg) return cfg;
+      const res = await fetch("./config.json", { cache: "no-store" });
+      cfg = await res.json();
+      return cfg;
+    }
+
+    async function ensureClient() {
+      if (client) return client;
+      const conf = await loadConfig();
+      client = new WebTorrent({
+        tracker: { rtcConfig: { iceServers: conf.iceServers || [] } }
+      });
+      client.on('error', e => log("Client error: " + (e?.message || e)));
+      return client;
+    }
+
+    function chooseAudioFile(files) {
+      const candidates = files.filter(f => /\.(mp3|m4a|aac|wav|ogg|opus|flac)$/i.test(f.name));
+      return candidates[0] || files[0];
+    }
+
+    function hookTorrentEvents(torrent) {
+      torrent.on('warning', e => log("⚠️ " + e.message));
+      torrent.on('error',   e => log("❌ " + (e?.message || e)));
+
+      const updateStats = () => {
+        peerEl.textContent = "Peers: " + torrent.numPeers;
+        speedEl.textContent = human(torrent.downloadSpeed) + "/s";
+        progEl.textContent = (torrent.progress * 100).toFixed(1) + "%";
+        statsEl.textContent = ` | ${human(torrent.downloaded)} of ${human(torrent.length)}`;
+      };
+      setInterval(() => { if (torrent) updateStats(); }, 1000);
+
+      torrent.on('wire', updateStats);
+      torrent.on('download', updateStats);
+      torrent.on('done', () => { updateStats(); statusEl.textContent = "Complete."; log("Download complete."); });
+    }
+
+    async function playMagnet(magnetURI) {
+      const conf = await loadConfig();
+      const c = await ensureClient();
+
+      // Clean up previous torrent if present
+      if (activeTorrent) {
+        try { activeTorrent.destroy({ destroyStore: false }); } catch {}
+        activeTorrent = null;
+      }
+
+      statusEl.textContent = "Connecting…";
+      log("Adding torrent: " + magnetURI);
+
+      const torrent = c.add(magnetURI, { announce: conf.trackers || [] });
+      activeTorrent = torrent;
+      hookTorrentEvents(torrent);
+
+      torrent.on('metadata', () => {
+        log("Metadata: " + torrent.name);
+        const file = chooseAudioFile(torrent.files);
+        if (!file) { statusEl.textContent = "No audio file found in torrent."; return; }
+
+        // Preload initial bytes to reduce start-up stutter
+        try {
+          const pre = Math.ceil((conf.prerollBytes || 2_000_000) / torrent.pieceLength);
+          torrent.select(0, Math.max(0, pre - 1), true);
+        } catch {}
+
+        // Stream directly to <audio> element
+        file.renderTo(player, { autoplay: false }, (err) => {
+          if (err) { statusEl.textContent = "Render failed."; log("Render error: " + err.message); return; }
+          statusEl.textContent = "Buffering…";
+          const maybePlay = () => {
+            if (player.readyState >= 2) {
+              player.play().catch(()=>{});
+              statusEl.textContent = "Playing.";
+            }
+          };
+          player.addEventListener('canplay', maybePlay, { once: true });
+          setTimeout(maybePlay, 800);
+        });
+      });
+    }
+
+    async function seedLocalFile(file) {
+      const conf = await loadConfig();
+      const c = await ensureClient();
+      seedBtn.disabled = true;
+
+      c.seed(file, { announce: conf.trackers || [] }, (torrent) => {
+        hookTorrentEvents(torrent);
+        const magnet = torrent.magnetURI;
+        seedMagnetEl.textContent = magnet;
+        seedMagnetEl.style.wordBreak = "break-all";
+        log("Seeding: " + torrent.name);
+        log("Magnet: " + magnet);
+        statusEl.textContent = "Seeding (keep this tab open to serve peers).";
+        seedBtn.disabled = false;
+      });
+    }
+
+    // Listeners
+    playBtn.addEventListener('click', () => {
+      const uri = magnetEl.value.trim();
+      if (!uri.startsWith("magnet:")) {
+        alert("Please paste a valid magnet URI.");
+        return;
+      }
+      playMagnet(uri).catch(e => log("Fatal: " + e.message));
+    });
+
+    seedBtn.addEventListener('click', () => {
+      const f = fileInput.files?.[0];
+      if (!f) { alert("Choose an audio file first."); return; }
+      seedLocalFile(f).catch(e => log("Seed error: " + e.message));
+    });
+
+    // Drag-and-drop to seed (quality-of-life)
+    document.addEventListener('dragover', (e) => { e.preventDefault(); });
+    document.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (e.dataTransfer?.files?.length) {
+        const f = e.dataTransfer.files[0];
+        seedLocalFile(f).catch(e2 => log("Seed error: " + e2.message));
+      }
+    });
+  </script>
+</body>
+</html>
