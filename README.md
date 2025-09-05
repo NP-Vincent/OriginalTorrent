@@ -21,7 +21,7 @@ Original Torrent is a browser-only torrent streamer for music creators and liste
 No installation or build step is required. The app seeds or streams audio directly from the browser.
 
 ## Configuration
-Edit `config.json` to change the list of WebTorrent trackers, WebRTC ICE servers, or the number of bytes to prefetch before playback. Both listening and seeding use these values.
+Edit `config.json` to change the list of WebTorrent trackers, WebRTC ICE servers, or the number of bytes to prefetch before playback. Both listening and seeding use these values. Advanced fields like `maxConns`, `strategy`, `dht`, `lsd`, `webSeeds`, `uploadLimit`, `downloadLimit`, and `blocklist` can also be tweaked for connectivity and bandwidth control.
 
 ## Development
 This project intentionally avoids build tools and external dependencies. Keep contributions self-contained and minimal. Run `npm test` if test scripts are added in the future.
