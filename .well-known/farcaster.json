@@ -12,4 +12,9 @@
     "description": "Music by Original Creators",
     "primaryCategory": "music"
   }
+"accountAssociation": {
+    "header": "eyJmaWQiOjExMTUxNTIsInR5cGUiOiJhdXRoIiwia2V5IjoiMHg4RGI0NWY5MGVmNGVCRkM2RDEzM0MxYjJjNmFjNzQyQjJBRTY1M0FhIn0",
+    "payload": "eyJkb21haW4iOiJwbGF5Lm9yaWdpbmFsdG9ycmVudC5jb20ifQ",
+    "signature": "Xj1UFQf0p5tJYeUafmP98jsJhmGxSV70TRtmuTE8sQ0HSlfK6uKS22Cpvncrzge1spTaOvVfnB/onC18mfT3ABw="
+  }
 }
