@@ -27,6 +27,11 @@ Edit `config.json` to control connectivity and playback behavior. Both listening
 ### Options
 - `iceServers`: WebRTC STUN/TURN servers. The default TURN entries use the public [OpenRelay](https://www.metered.ca/tools/openrelay/) service with `openrelayproject` credentials for testing. For production, obtain your own `username` and `credential` from a TURN provider.
 - `trackers`: WebSocket trackers used for peer discovery.
+  Defaults include `wss://tracker.openwebtorrent.com`,
+  `wss://tracker.btorrent.xyz`,
+  `wss://tracker.ghostchu-services.top/announce`, and
+  `wss://tracker.files.fm:7073/announce`. Monitor these periodically and
+  replace any that stop responding.
 - `prerollBytes`: Number of bytes to fetch before playback begins.
 - `maxConns`: Maximum number of simultaneous peer connections.
 - `strategy`: Piece download strategy for seeding (`sequential` streams from start; playback always uses sequential).
