@@ -25,13 +25,11 @@
   ],
   "prerollBytes": 2097152,
   "maxConns": 100,
-  "strategy": "sequential"
-
-  "dht": true, // Enable Distributed Hash Table (can help find peers)
-  "lsd": true, // Enable Local Service Discovery (find peers on your local network)
-  "webSeeds": true, // Enable HTTP-based web seeds (BEP19)
-  "uploadLimit": -1, // Global upload limit in bytes/sec (-1 for unlimited)
-  "downloadLimit": -1, // Global download limit in bytes/sec (-1 for unlimited)
-  "blocklist": [], // Array of IP addresses or CIDR ranges to block
-
+  "strategy": "sequential",
+  "dht": true,
+  "lsd": true,
+  "webSeeds": true,
+  "uploadLimit": -1,
+  "downloadLimit": -1,
+  "blocklist": []
 }
