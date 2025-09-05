@@ -103,6 +103,7 @@
     const copyBtn    = document.getElementById('copyBtn');
 
     let cfg, client, activeTorrent;
+    const seenIceErrors = new Set();
 
     const log = (m) => { logEl.textContent += m + "\\n"; logEl.scrollTop = logEl.scrollHeight; };
     window.log = log;
@@ -151,6 +152,16 @@
         setStatus(msg);
       });
       client.on("warning", (e) => log("Client warning: " + (e?.message || e)));
+      client.on("peer", (p) => {
+        p.on("icecandidateerror", (e) => {
+          const url = e?.url || "unknown";
+          const code = e?.errorCode || e?.code || "unknown";
+          const key = url + "|" + code;
+          if (seenIceErrors.has(key)) return;
+          seenIceErrors.add(key);
+          log(`ICE server error: ${url} (code ${code}). Check TURN credentials or remove this ICE server.`);
+        });
+      });
       return client;
     }
 
