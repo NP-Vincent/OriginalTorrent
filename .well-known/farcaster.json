@@ -1,5 +1,5 @@
 {
-  "frame": {
+  "miniapp": {
     "name": "Original Torrent",
     "version": "1",
     "iconUrl": "https://play.originaltorrent.com/icon.png",
@@ -10,8 +10,12 @@
     "webhookUrl": "https://play.originaltorrent.com/api/webhook",
     "subtitle": "Original Torrent",
     "description": "Music by Original Creators",
+    "requiredChains": ["eip155:42161"],
+    "requiredCapabilities": ["wallet.getEthereumProvider"],
+
+    "subtitle": "Original Torrent",
     "primaryCategory": "music"
-  }
+  },
 "accountAssociation": {
     "header": "eyJmaWQiOjExMTUxNTIsInR5cGUiOiJhdXRoIiwia2V5IjoiMHg4RGI0NWY5MGVmNGVCRkM2RDEzM0MxYjJjNmFjNzQyQjJBRTY1M0FhIn0",
     "payload": "eyJkb21haW4iOiJwbGF5Lm9yaWdpbmFsdG9ycmVudC5jb20ifQ",
