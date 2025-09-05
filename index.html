@@ -201,17 +201,29 @@
       }
 
       statusEl.textContent = "Connecting…";
-      log("Adding torrent: " + magnetURI);
       let announce = conf.trackers || [];
+      let sanitized = magnetURI;
       try {
         const url = new URL(magnetURI);
-        const tr = url.searchParams.getAll('tr');
-        announce = Array.from(new Set([...announce, ...tr]));
+        const params = url.searchParams;
+        const tr = params.getAll('tr');
+        const keep = [];
+        const removed = [];
+        tr.forEach(t => {
+          if (/^wss?:\/\//.test(t)) keep.push(t);
+          else removed.push(t);
+        });
+        params.delete('tr');
+        keep.forEach(t => params.append('tr', t));
+        if (removed.length) log("Removed trackers from magnet: " + removed.join(", "));
+        sanitized = url.toString();
+        announce = Array.from(new Set([...announce, ...keep]));
       } catch {}
 
       announce = filterTrackers(announce);
+      log("Adding torrent: " + sanitized);
 
-      const torrent = c.add(magnetURI, { announce, strategy: 'sequential' });
+      const torrent = c.add(sanitized, { announce, strategy: 'sequential' });
       activeTorrent = torrent;
       hookTorrentEvents(torrent);
 
