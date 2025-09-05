@@ -107,8 +107,19 @@
 
     async function loadConfig() {
       if (cfg) return cfg;
-      const res = await fetch("./config.json", { cache: "no-store" });
-      cfg = await res.json();
+      try {
+        const res = await fetch("./config.json", { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error(res.statusText || ("HTTP " + res.status));
+        }
+        cfg = await res.json();
+      } catch (e) {
+        const msg = "Failed to load config.";
+        statusEl.textContent = msg;
+        setStatus(msg);
+        log(msg + " " + (e?.message || e));
+        throw e;
+      }
       return cfg;
     }
 
