@@ -189,7 +189,7 @@
         announce = Array.from(new Set([...announce, ...tr]));
       } catch {}
 
-      const torrent = c.add(magnetURI, { announce, strategy: conf.strategy });
+      const torrent = c.add(magnetURI, { announce, strategy: 'sequential' });
       activeTorrent = torrent;
       hookTorrentEvents(torrent);
 
