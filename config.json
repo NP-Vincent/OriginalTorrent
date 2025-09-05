@@ -27,7 +27,6 @@
   "maxConns": 100,
   "strategy": "sequential"
 
-  // ... other settings ...
   "dht": true, // Enable Distributed Hash Table (can help find peers)
   "lsd": true, // Enable Local Service Discovery (find peers on your local network)
   "webSeeds": true, // Enable HTTP-based web seeds (BEP19)
