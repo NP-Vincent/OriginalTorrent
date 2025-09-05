@@ -28,7 +28,7 @@ Edit `config.json` to control connectivity and playback behavior. Both listening
 - `trackers`: WebSocket trackers used for peer discovery.
 - `prerollBytes`: Number of bytes to fetch before playback begins.
 - `maxConns`: Maximum number of simultaneous peer connections.
-- `strategy`: Piece download strategy (`sequential` streams from start).
+- `strategy`: Piece download strategy for seeding (`sequential` streams from start; playback always uses sequential).
 - `dht`: Enable distributed hash table peer discovery.
 - `lsd`: Enable local service discovery on the LAN.
 - `webSeeds`: Allow fetching pieces from HTTP/HTTPS web seeds.
