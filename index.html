@@ -90,6 +90,7 @@
     let cfg, client, activeTorrent;
 
     const log = (m) => { logEl.textContent += m + "\\n"; logEl.scrollTop = logEl.scrollHeight; };
+    window.log = log;
     const human = (n) => {
       if (n === 0) return "0 B";
       const u = ["B","KB","MB","GB","TB"]; let i=0; while(n>=1024 && i<u.length-1){n/=1024;i++;} return n.toFixed(1)+" "+u[i];
@@ -109,6 +110,7 @@
         tracker: { rtcConfig: { iceServers: conf.iceServers || [] } }
       });
       client.on('error', e => log("Client error: " + (e?.message || e)));
+      client.on('warning', e => log("Client warning: " + (e?.message || e)));
       return client;
     }
 
@@ -120,6 +122,10 @@
     function hookTorrentEvents(torrent) {
       torrent.on('warning', e => log("⚠️ " + e.message));
       torrent.on('error',   e => log("❌ " + (e?.message || e)));
+      torrent.on('trackerAnnounce', t => log("Tracker announce: " + (t?.announce || t)));
+      torrent.on('trackerWarning', e => log("Tracker warning: " + (e?.message || e)));
+      torrent.on('trackerError',   e => log("Tracker error: " + (e?.message || e)));
+      torrent.on('noPeers', type => log("No peers: " + type));
 
       const updateStats = () => {
         peerEl.textContent = "Peers: " + torrent.numPeers;
@@ -199,6 +205,7 @@
     import WebTorrent from "https://esm.sh/webtorrent@2.3.0";
 
     let cfg, client;
+    const log = window.log || (() => {});
 
     async function loadConfig() {
       if (cfg) return cfg;
@@ -214,6 +221,7 @@
         tracker: { rtcConfig: { iceServers: conf.iceServers || [] } }
       });
       client.on("error", (e) => setStatus("Client error: " + (e?.message || e)));
+      client.on("warning", (e) => log("Client warning: " + (e?.message || e)));
       return client;
     }
 
@@ -241,6 +249,10 @@
 
         torrent.on("wire", () => setStatus(`Seeding — peers: ${torrent.numPeers}`));
         torrent.on("error", (e) => setStatus("Torrent error: " + (e?.message || e)));
+        torrent.on("trackerAnnounce", (t) => log("Tracker announce: " + (t?.announce || t)));
+        torrent.on("trackerWarning", (e) => log("Tracker warning: " + (e?.message || e)));
+        torrent.on("trackerError", (e) => log("Tracker error: " + (e?.message || e)));
+        torrent.on("noPeers", (type) => log("No peers: " + type));
         seedBtn.disabled = false;
       });
     }
