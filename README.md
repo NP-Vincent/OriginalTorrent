@@ -24,7 +24,7 @@ No installation or build step is required. The app seeds or streams audio direct
 Edit `config.json` to control connectivity and playback behavior. Both listening and seeding use these values.
 
 ### Options
-- `iceServers`: WebRTC STUN/TURN servers. TURN entries relay traffic when direct peer connections fail and require valid `username` and `credential` from your provider. Replace the placeholder `your_turn_username` and `your_turn_auth_token` before deploying.
+- `iceServers`: WebRTC STUN/TURN servers. The default TURN entries use the public [OpenRelay](https://www.metered.ca/tools/openrelay/) service with `openrelayproject` credentials for testing. For production, obtain your own `username` and `credential` from a TURN provider.
 - `trackers`: WebSocket trackers used for peer discovery.
 - `prerollBytes`: Number of bytes to fetch before playback begins.
 - `maxConns`: Maximum number of simultaneous peer connections.
@@ -35,6 +35,9 @@ Edit `config.json` to control connectivity and playback behavior. Both listening
 - `uploadLimit`: Upload bandwidth limit in bytes per second (`-1` for unlimited).
 - `downloadLimit`: Download bandwidth limit in bytes per second (`-1` for unlimited).
 - `blocklist`: Array of IP addresses or ranges to block.
+
+### TURN credentials
+Obtain TURN credentials from a provider such as Twilio, Metered, or a self-hosted Coturn server. Avoid committing sensitive keys to version control; serve a custom `config.json` or inject the values at deploy time so they remain private.
 
 ## Development
 This project intentionally avoids build tools and external dependencies. Keep contributions self-contained and minimal. Run `npm test` if test scripts are added in the future.

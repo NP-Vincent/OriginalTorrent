@@ -7,14 +7,14 @@
       "urls": "stun:stun.l.google.com:19302"
     },
     {
-      "urls": "turn:global.turn.twilio.com:3478?transport=udp",
-      "username": "your_turn_username",
-      "credential": "your_turn_auth_token"
+      "urls": "turn:openrelay.metered.ca:80?transport=udp",
+      "username": "openrelayproject",
+      "credential": "openrelayproject"
     },
     {
-      "urls": "turn:global.turn.twilio.com:3478?transport=tcp",
-      "username": "your_turn_username",
-      "credential": "your_turn_auth_token"
+      "urls": "turn:openrelay.metered.ca:443?transport=tcp",
+      "username": "openrelayproject",
+      "credential": "openrelayproject"
     }
   ],
   "trackers": [
