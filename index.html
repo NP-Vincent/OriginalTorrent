@@ -127,7 +127,14 @@
       if (client) return client;
       const conf = await loadConfig();
       client = new WebTorrent({
-        tracker: { rtcConfig: { iceServers: conf.iceServers || [] } }
+        tracker: { rtcConfig: { iceServers: conf.iceServers || [] } },
+        maxConns: conf.maxConns,
+        dht: conf.dht,
+        lsd: conf.lsd,
+        webSeeds: conf.webSeeds,
+        uploadLimit: conf.uploadLimit,
+        downloadLimit: conf.downloadLimit,
+        blocklist: conf.blocklist
       });
       client.on("error", (e) => {
         const msg = "Client error: " + (e?.message || e);
@@ -182,7 +189,7 @@
         announce = Array.from(new Set([...announce, ...tr]));
       } catch {}
 
-      const torrent = c.add(magnetURI, { announce });
+      const torrent = c.add(magnetURI, { announce, strategy: conf.strategy });
       activeTorrent = torrent;
       hookTorrentEvents(torrent);
 
@@ -220,7 +227,7 @@
       const conf = await loadConfig();
       let torrent;
       try {
-        torrent = c.seed(file, { announce: conf.trackers || [] }, (t) => {
+        torrent = c.seed(file, { announce: conf.trackers || [], strategy: conf.strategy }, (t) => {
           setStatus(`Seeding "${t.name}" — keep this tab open to serve peers.`);
           magnetOut.value = t.magnetURI;
           magnetRow.style.display = "block";
