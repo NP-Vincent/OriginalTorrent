@@ -146,8 +146,14 @@
 
       statusEl.textContent = "Connecting…";
       log("Adding torrent: " + magnetURI);
+      let announce = conf.trackers || [];
+      try {
+        const url = new URL(magnetURI);
+        const tr = url.searchParams.getAll('tr');
+        announce = Array.from(new Set([...announce, ...tr]));
+      } catch {}
 
-      const torrent = c.add(magnetURI, { announce: conf.trackers || [] });
+      const torrent = c.add(magnetURI, { announce });
       activeTorrent = torrent;
       hookTorrentEvents(torrent);
 
