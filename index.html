@@ -228,6 +228,9 @@
         keep.forEach(t => params.append('tr', t));
         if (removed.length) log("Removed trackers from magnet: " + removed.join(", "));
         sanitized = url.toString();
+        // URL.toString percent-encodes the "xt" value, which breaks the magnet.
+        // Decode it back to "urn:btih:" so WebTorrent accepts the URI.
+        sanitized = sanitized.replace(/xt=urn%3Abtih%3A/i, 'xt=urn:btih:');
         announce = Array.from(new Set([...announce, ...keep]));
       } catch {}
 
