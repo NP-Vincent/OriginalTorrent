@@ -198,12 +198,24 @@
   <script type="module">
     import WebTorrent from "https://esm.sh/webtorrent@2.3.0";
 
-    const TRACKERS = [
-      "wss://tracker.openwebtorrent.com",
-      "wss://tracker.btorrent.xyz",
-      "wss://tracker.webtorrent.dev"
-    ];
-    const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
+    let cfg, client;
+
+    async function loadConfig() {
+      if (cfg) return cfg;
+      const res = await fetch("./config.json", { cache: "no-store" });
+      cfg = await res.json();
+      return cfg;
+    }
+
+    async function ensureClient() {
+      if (client) return client;
+      const conf = await loadConfig();
+      client = new WebTorrent({
+        tracker: { rtcConfig: { iceServers: conf.iceServers || [] } }
+      });
+      client.on("error", (e) => setStatus("Client error: " + (e?.message || e)));
+      return client;
+    }
 
     const fileInput  = document.getElementById("fileInput");
     const seedBtn    = document.getElementById("seedBtn");
@@ -211,11 +223,6 @@
     const magnetRow  = document.getElementById("magnetRow");
     const magnetOut  = document.getElementById("magnetOut");
     const copyBtn    = document.getElementById("copyBtn");
-
-    const client = new WebTorrent({
-      tracker: { rtcConfig: { iceServers: ICE_SERVERS } }
-    });
-    client.on("error", (e) => setStatus("Client error: " + (e?.message || e)));
 
     function setStatus(msg) {
       seedStatus.textContent = msg;
@@ -225,7 +232,9 @@
       seedBtn.disabled = true;
       setStatus("Preparing…");
 
-      client.seed(file, { announce: TRACKERS }, (torrent) => {
+      const conf = await loadConfig();
+      const c = await ensureClient();
+      c.seed(file, { announce: conf.trackers || [] }, (torrent) => {
         setStatus(`Seeding "${torrent.name}" — keep this tab open to serve peers.`);
         magnetOut.value = torrent.magnetURI;
         magnetRow.style.display = "block";
