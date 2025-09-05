@@ -151,6 +151,17 @@
       return candidates[0] || files[0];
     }
 
+    function filterTrackers(urls) {
+      const keep = [];
+      const dropped = [];
+      (urls || []).forEach(u => {
+        if (/^wss?:\/\//.test(u)) keep.push(u);
+        else dropped.push(u);
+      });
+      if (dropped.length) log("Ignoring trackers: " + dropped.join(", "));
+      return keep;
+    }
+
     function hookTorrentEvents(torrent) {
       torrent.on('warning', e => log("⚠️ " + e.message));
       torrent.on('error',   e => log("❌ " + (e?.message || e)));
@@ -190,6 +201,8 @@
         announce = Array.from(new Set([...announce, ...tr]));
       } catch {}
 
+      announce = filterTrackers(announce);
+
       const torrent = c.add(magnetURI, { announce, strategy: 'sequential' });
       activeTorrent = torrent;
       hookTorrentEvents(torrent);
@@ -228,7 +241,7 @@
       const conf = await loadConfig();
       let torrent;
       try {
-        torrent = c.seed(file, { announce: conf.trackers || [], strategy: conf.strategy }, (t) => {
+        torrent = c.seed(file, { announce: filterTrackers(conf.trackers || []), strategy: conf.strategy }, (t) => {
           setStatus(`Seeding "${t.name}" — keep this tab open to serve peers.`);
           magnetOut.value = t.magnetURI;
           magnetRow.style.display = "block";
