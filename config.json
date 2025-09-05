@@ -1,9 +1,29 @@
 {
+  "iceServers": [
+    {
+      "urls": "stun:global.stun.twilio.com:3478?transport=udp"
+    },
+    {
+      "urls": "stun:stun.l.google.com:19302"
+    },
+    {
+      "urls": "turn:global.turn.twilio.com:3478?transport=udp",
+      "username": "your_turn_username",
+      "credential": "your_turn_auth_token"
+    },
+    {
+      "urls": "turn:global.turn.twilio.com:3478?transport=tcp",
+      "username": "your_turn_username",
+      "credential": "your_turn_auth_token"
+    }
+  ],
   "trackers": [
     "wss://tracker.openwebtorrent.com",
     "wss://tracker.btorrent.xyz",
+    "wss://tracker.fastcast.nz",
     "wss://tracker.webtorrent.dev"
   ],
-  "iceServers": [{ "urls": "stun:stun.l.google.com:19302" }],
-  "prerollBytes": 2000000
+  "prerollBytes": 2097152,
+  "maxConns": 100,
+  "strategy": "sequential"
 }
