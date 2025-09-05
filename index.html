@@ -72,10 +72,11 @@
     });
   </script>
 
-  <!-- WebTorrent (browser ESM) + app logic -->
-  <script type="module">
-    import WebTorrent from "https://esm.sh/webtorrent@2.3.0";
+  <!-- WebTorrent library -->
+  <script src="https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js"></script>
 
+  <!-- App logic -->
+  <script>
     // UI
     const logEl = document.getElementById('log');
     const statusEl = document.getElementById('status');
