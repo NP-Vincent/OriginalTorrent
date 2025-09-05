@@ -2,9 +2,9 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>WebTorrent video player</title>
+    <title>WebTorrent player</title>
     <style>
-      #output video {
+      #output audio {
         width: 100%;
       }
       #progressBar {
@@ -52,7 +52,7 @@
     <div id="hero">
       <div id="output">
         <div id="progressBar"></div>
-        <!-- The video player will be added here -->
+        <!-- The player will be added here -->
       </div>
       <!-- Statistics -->
       <div id="status">
@@ -61,7 +61,7 @@
           <span class="show-seed">Seeding </span>
           <code>
             <!-- Informative link to the torrent file -->
-            <a id="torrentLink" href="https://webtorrent.io/torrents/sintel.torrent">sintel.torrent</a>
+            <a id="torrentLink" href="Them_Clones-My_Life.torrent">Them_Clones-My_Life.torrent</a>
           </code>
           <span class="show-leech"> from </span>
           <span class="show-seed"> to </span>
@@ -83,7 +83,7 @@
     <script src="http://momentjs.com/downloads/moment.min.js"></script>
 
     <script>
-      const torrentId = 'https://webtorrent.io/torrents/sintel.torrent'
+      const torrentId = 'Them_Clones-My_Life.torrent'
 
       const client = new WebTorrent()
 
@@ -100,9 +100,9 @@
       // Download the torrent
       client.add(torrentId, function (torrent) {
 
-        // Torrents can contain many files. Let's use the .mp4 file
+        // Torrents can contain many files. Let's use the .mp3 file
         const file = torrent.files.find(function (file) {
-          return file.name.endsWith('.mp4')
+          return file.name.endsWith('.mp3')
         })
 
         // Stream the file in the browser
