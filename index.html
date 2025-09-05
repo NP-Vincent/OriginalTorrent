@@ -207,17 +207,27 @@
       setStatus("Preparing…");
 
       const conf = await loadConfig();
-      c.seed(file, { announce: conf.trackers || [] }, (torrent) => {
-        setStatus(`Seeding "${torrent.name}" — keep this tab open to serve peers.`);
-        magnetOut.value = torrent.magnetURI;
-        magnetRow.style.display = "block";
+      let torrent;
+      try {
+        torrent = c.seed(file, { announce: conf.trackers || [] }, (t) => {
+          setStatus(`Seeding "${t.name}" — keep this tab open to serve peers.`);
+          magnetOut.value = t.magnetURI;
+          magnetRow.style.display = "block";
 
-        torrent.on("wire", () => setStatus(`Seeding — peers: ${torrent.numPeers}`));
-        torrent.on("error", (e) => setStatus("Torrent error: " + (e?.message || e)));
-        torrent.on("trackerAnnounce", (t) => log("Tracker announce: " + (t?.announce || t)));
-        torrent.on("trackerWarning", (e) => log("Tracker warning: " + (e?.message || e)));
-        torrent.on("trackerError", (e) => log("Tracker error: " + (e?.message || e)));
-        torrent.on("noPeers", (type) => log("No peers: " + type));
+          t.on("wire", () => setStatus(`Seeding — peers: ${t.numPeers}`));
+          t.on("trackerAnnounce", (a) => log("Tracker announce: " + (a?.announce || a)));
+          t.on("trackerWarning", (e) => log("Tracker warning: " + (e?.message || e)));
+          t.on("trackerError", (e) => log("Tracker error: " + (e?.message || e)));
+          t.on("noPeers", (type) => log("No peers: " + type));
+          seedBtn.disabled = false;
+        });
+      } catch (e) {
+        setStatus("Seed failed: " + (e?.message || e));
+        seedBtn.disabled = false;
+        return;
+      }
+      torrent.on("error", (e) => {
+        setStatus("Torrent error: " + (e?.message || e));
         seedBtn.disabled = false;
       });
     }
