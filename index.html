@@ -43,16 +43,14 @@
     <audio id="player" controls preload="none" playsinline></audio>
   </div>
 
-  <!-- Creator (optional) -->
   <div class="card">
-    <h2 style="margin-top:0">Create & Seed (optional)</h2>
-    <div class="flex">
-      <input id="fileInput" type="file" accept="audio/*" />
-      <button id="seedBtn">Seed</button>
-      <span id="seedMagnet" class="small"></span>
-    </div>
-    <div class="meta small">
-      Seeding from the browser requires the tab to stay open. For persistent availability, you’ll want multiple listeners or a desktop/web seed later.
+    <h3>Create & Seed</h3>
+    <input id="fileInput" type="file" accept="audio/*" />
+    <button id="seedBtn">Seed</button>
+    <div id="seedStatus" style="margin-top:8px;font:12px system-ui">Idle.</div>
+    <div id="magnetRow" style="display:none;margin-top:8px">
+      <input id="magnetOut" type="text" readonly style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px" />
+      <button id="copyBtn" style="margin-top:8px;padding:8px 12px;border:1px solid #ddd;border-radius:8px;background:#f7f7f7">Copy magnet</button>
     </div>
   </div>
 
@@ -88,10 +86,6 @@
     const magnetEl = document.getElementById('magnet');
     const playBtn  = document.getElementById('playBtn');
     const player   = document.getElementById('player');
-
-    const fileInput = document.getElementById('fileInput');
-    const seedBtn   = document.getElementById('seedBtn');
-    const seedMagnetEl = document.getElementById('seedMagnet');
 
     let cfg, client, activeTorrent;
 
@@ -184,23 +178,6 @@
       });
     }
 
-    async function seedLocalFile(file) {
-      const conf = await loadConfig();
-      const c = await ensureClient();
-      seedBtn.disabled = true;
-
-      c.seed(file, { announce: conf.trackers || [] }, (torrent) => {
-        hookTorrentEvents(torrent);
-        const magnet = torrent.magnetURI;
-        seedMagnetEl.textContent = magnet;
-        seedMagnetEl.style.wordBreak = "break-all";
-        log("Seeding: " + torrent.name);
-        log("Magnet: " + magnet);
-        statusEl.textContent = "Seeding (keep this tab open to serve peers).";
-        seedBtn.disabled = false;
-      });
-    }
-
     // Listeners
     playBtn.addEventListener('click', () => {
       const uri = magnetEl.value.trim();
@@ -210,20 +187,63 @@
       }
       playMagnet(uri).catch(e => log("Fatal: " + e.message));
     });
+  </script>
 
-    seedBtn.addEventListener('click', () => {
+  <script type="module">
+    import WebTorrent from "https://esm.sh/webtorrent@2.3.0";
+
+    const TRACKERS = [
+      "wss://tracker.openwebtorrent.com",
+      "wss://tracker.btorrent.xyz",
+      "wss://tracker.webtorrent.dev"
+    ];
+    const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
+
+    const fileInput  = document.getElementById("fileInput");
+    const seedBtn    = document.getElementById("seedBtn");
+    const seedStatus = document.getElementById("seedStatus");
+    const magnetRow  = document.getElementById("magnetRow");
+    const magnetOut  = document.getElementById("magnetOut");
+    const copyBtn    = document.getElementById("copyBtn");
+
+    const client = new WebTorrent({
+      tracker: { rtcConfig: { iceServers: ICE_SERVERS } }
+    });
+    client.on("error", (e) => setStatus("Client error: " + (e?.message || e)));
+
+    function setStatus(msg) {
+      seedStatus.textContent = msg;
+    }
+
+    async function seedLocalFile(file) {
+      seedBtn.disabled = true;
+      setStatus("Preparing…");
+
+      client.seed(file, { announce: TRACKERS }, (torrent) => {
+        setStatus(`Seeding "${torrent.name}" — keep this tab open to serve peers.`);
+        magnetOut.value = torrent.magnetURI;
+        magnetRow.style.display = "block";
+
+        torrent.on("wire", () => setStatus(`Seeding — peers: ${torrent.numPeers}`));
+        torrent.on("error", (e) => setStatus("Torrent error: " + (e?.message || e)));
+        seedBtn.disabled = false;
+      });
+    }
+
+    seedBtn.addEventListener("click", () => {
       const f = fileInput.files?.[0];
-      if (!f) { alert("Choose an audio file first."); return; }
-      seedLocalFile(f).catch(e => log("Seed error: " + e.message));
+      if (!f) { setStatus("Choose an audio file first."); return; }
+      seedLocalFile(f);
     });
 
-    // Drag-and-drop to seed (quality-of-life)
-    document.addEventListener('dragover', (e) => { e.preventDefault(); });
-    document.addEventListener('drop', (e) => {
-      e.preventDefault();
-      if (e.dataTransfer?.files?.length) {
-        const f = e.dataTransfer.files[0];
-        seedLocalFile(f).catch(e2 => log("Seed error: " + e2.message));
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(magnetOut.value);
+        copyBtn.textContent = "Copied";
+        setTimeout(() => (copyBtn.textContent = "Copy magnet"), 1200);
+      } catch {
+        magnetOut.select();
+        setStatus("Press ⌘/Ctrl+C to copy.");
       }
     });
   </script>
