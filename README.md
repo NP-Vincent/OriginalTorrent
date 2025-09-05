@@ -21,7 +21,20 @@ Original Torrent is a browser-only torrent streamer for music creators and liste
 No installation or build step is required. The app seeds or streams audio directly from the browser.
 
 ## Configuration
-Edit `config.json` to change the list of WebTorrent trackers, WebRTC ICE servers, or the number of bytes to prefetch before playback. Both listening and seeding use these values. Advanced fields like `maxConns`, `strategy`, `dht`, `lsd`, `webSeeds`, `uploadLimit`, `downloadLimit`, and `blocklist` can also be tweaked for connectivity and bandwidth control.
+Edit `config.json` to control connectivity and playback behavior. Both listening and seeding use these values.
+
+### Options
+- `iceServers`: WebRTC STUN/TURN servers. TURN entries relay traffic when direct peer connections fail and require valid `username` and `credential` from your provider. Replace the placeholder `your_turn_username` and `your_turn_auth_token` before deploying.
+- `trackers`: WebSocket trackers used for peer discovery.
+- `prerollBytes`: Number of bytes to fetch before playback begins.
+- `maxConns`: Maximum number of simultaneous peer connections.
+- `strategy`: Piece download strategy (`sequential` streams from start).
+- `dht`: Enable distributed hash table peer discovery.
+- `lsd`: Enable local service discovery on the LAN.
+- `webSeeds`: Allow fetching pieces from HTTP/HTTPS web seeds.
+- `uploadLimit`: Upload bandwidth limit in bytes per second (`-1` for unlimited).
+- `downloadLimit`: Download bandwidth limit in bytes per second (`-1` for unlimited).
+- `blocklist`: Array of IP addresses or ranges to block.
 
 ## Development
 This project intentionally avoids build tools and external dependencies. Keep contributions self-contained and minimal. Run `npm test` if test scripts are added in the future.
