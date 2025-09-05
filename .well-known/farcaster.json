@@ -1,0 +1,15 @@
+{
+  "frame": {
+    "name": "Original Torrent",
+    "version": "1",
+    "iconUrl": "https://play.originaltorrent.com/icon.png",
+    "homeUrl": "https://play.originaltorrent.com",
+    "imageUrl": "https://play.originaltorrent.com/image.png",
+    "splashImageUrl": "https://play.originaltorrent.com/splash.png",
+    "splashBackgroundColor": "#FFFFFF",
+    "webhookUrl": "https://play.originaltorrent.com/api/webhook",
+    "subtitle": "Original Torrent",
+    "description": "Music by Original Creators",
+    "primaryCategory": "music"
+  }
+}
