@@ -6,6 +6,7 @@ Original Torrent is a browser-only torrent streamer for music creators and liste
 - **Farcaster MiniApp ready** – includes `/.well-known/farcaster.json` manifest and frame tags.
 - **WebRTC + WebTorrent** – pure browser streaming over WebSocket trackers (no TCP/UDP, no server).
 - **Listener mode** – paste a magnet URI to stream audio into a native `<audio>` player.
+- **Combined trackers** – merges trackers from the magnet URI with those in `config.json` to improve peer discovery.
 - **Creator mode** – select a local audio file, generate a magnet link, copy it, and seed directly from the browser.
 - **Minimal UI** – plain HTML + JS, no build step or framework.
 - **Runtime config** – trackers and ICE servers are stored in `config.json` for easy updates.
