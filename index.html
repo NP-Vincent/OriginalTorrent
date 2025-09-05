@@ -86,11 +86,20 @@
     const magnetEl = document.getElementById('magnet');
     const playBtn  = document.getElementById('playBtn');
     const player   = document.getElementById('player');
+    const fileInput  = document.getElementById('fileInput');
+    const seedBtn    = document.getElementById('seedBtn');
+    const seedStatus = document.getElementById('seedStatus');
+    const magnetRow  = document.getElementById('magnetRow');
+    const magnetOut  = document.getElementById('magnetOut');
+    const copyBtn    = document.getElementById('copyBtn');
 
     let cfg, client, activeTorrent;
 
     const log = (m) => { logEl.textContent += m + "\\n"; logEl.scrollTop = logEl.scrollHeight; };
     window.log = log;
+    function setStatus(msg) {
+      seedStatus.textContent = msg;
+    }
     const human = (n) => {
       if (n === 0) return "0 B";
       const u = ["B","KB","MB","GB","TB"]; let i=0; while(n>=1024 && i<u.length-1){n/=1024;i++;} return n.toFixed(1)+" "+u[i];
@@ -109,8 +118,12 @@
       client = new WebTorrent({
         tracker: { rtcConfig: { iceServers: conf.iceServers || [] } }
       });
-      client.on('error', e => log("Client error: " + (e?.message || e)));
-      client.on('warning', e => log("Client warning: " + (e?.message || e)));
+      client.on("error", (e) => {
+        const msg = "Client error: " + (e?.message || e);
+        log(msg);
+        setStatus(msg);
+      });
+      client.on("warning", (e) => log("Client warning: " + (e?.message || e)));
       return client;
     }
 
@@ -140,9 +153,8 @@
       torrent.on('done', () => { updateStats(); statusEl.textContent = "Complete."; log("Download complete."); });
     }
 
-    async function playMagnet(magnetURI) {
+    async function playMagnet(c, magnetURI) {
       const conf = await loadConfig();
-      const c = await ensureClient();
 
       // Clean up previous torrent if present
       if (activeTorrent) {
@@ -189,59 +201,12 @@
         });
       });
     }
-
-    // Listeners
-    playBtn.addEventListener('click', () => {
-      const uri = magnetEl.value.trim();
-      if (!uri.startsWith("magnet:")) {
-        alert("Please paste a valid magnet URI.");
-        return;
-      }
-      playMagnet(uri).catch(e => log("Fatal: " + e.message));
-    });
-  </script>
-
-  <script type="module">
-    import WebTorrent from "https://esm.sh/webtorrent@2.3.0";
-
-    let cfg, client;
-    const log = window.log || (() => {});
-
-    async function loadConfig() {
-      if (cfg) return cfg;
-      const res = await fetch("./config.json", { cache: "no-store" });
-      cfg = await res.json();
-      return cfg;
-    }
-
-    async function ensureClient() {
-      if (client) return client;
-      const conf = await loadConfig();
-      client = new WebTorrent({
-        tracker: { rtcConfig: { iceServers: conf.iceServers || [] } }
-      });
-      client.on("error", (e) => setStatus("Client error: " + (e?.message || e)));
-      client.on("warning", (e) => log("Client warning: " + (e?.message || e)));
-      return client;
-    }
-
-    const fileInput  = document.getElementById("fileInput");
-    const seedBtn    = document.getElementById("seedBtn");
-    const seedStatus = document.getElementById("seedStatus");
-    const magnetRow  = document.getElementById("magnetRow");
-    const magnetOut  = document.getElementById("magnetOut");
-    const copyBtn    = document.getElementById("copyBtn");
-
-    function setStatus(msg) {
-      seedStatus.textContent = msg;
-    }
-
-    async function seedLocalFile(file) {
+    
+    async function seedLocalFile(c, file) {
       seedBtn.disabled = true;
       setStatus("Preparing…");
 
       const conf = await loadConfig();
-      const c = await ensureClient();
       c.seed(file, { announce: conf.trackers || [] }, (torrent) => {
         setStatus(`Seeding "${torrent.name}" — keep this tab open to serve peers.`);
         magnetOut.value = torrent.magnetURI;
@@ -257,10 +222,22 @@
       });
     }
 
-    seedBtn.addEventListener("click", () => {
+    // Listeners
+    playBtn.addEventListener('click', async () => {
+      const uri = magnetEl.value.trim();
+      if (!uri.startsWith("magnet:")) {
+        alert("Please paste a valid magnet URI.");
+        return;
+      }
+      const c = await ensureClient();
+      playMagnet(c, uri).catch(e => log("Fatal: " + e.message));
+    });
+
+    seedBtn.addEventListener("click", async () => {
       const f = fileInput.files?.[0];
       if (!f) { setStatus("Choose an audio file first."); return; }
-      seedLocalFile(f);
+      const c = await ensureClient();
+      seedLocalFile(c, f);
     });
 
     copyBtn.addEventListener("click", async () => {
