@@ -12,8 +12,6 @@
     "description": "Music by Original Creators",
     "requiredChains": ["eip155:42161"],
     "requiredCapabilities": ["wallet.getEthereumProvider"],
-
-    "subtitle": "Original Torrent",
     "primaryCategory": "music"
   },
 "accountAssociation": {
