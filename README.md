@@ -10,6 +10,7 @@ Original Torrent is a browser-only torrent streamer for music creators and liste
 - **Creator mode** – select a local audio file, generate a magnet link, copy it, and seed directly from the browser.
 - **Minimal UI** – plain HTML + JS, no build step or framework.
 - **Runtime config** – trackers and ICE servers are stored in `config.json` for easy updates.
+- **Graceful config errors** – displays a message if `config.json` fails to load or parse.
 - **Logging & stats** – live peer count, speed, and progress display.
 - **Light background** – explicitly sets a white background for consistent readability.
 
