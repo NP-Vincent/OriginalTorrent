@@ -13,6 +13,7 @@ Original Torrent is a browser-only torrent streamer for music creators and liste
 - **Graceful config errors** – displays a message if `config.json` fails to load or parse.
 - **Logging & stats** – live peer count, speed, and progress display.
 - **Light background** – explicitly sets a white background for consistent readability.
+- **Example pages** – index links to `example_1.html` and `example_2.html` demonstrating sample torrents.
 
 ## Getting Started
 1. Clone the repository.
